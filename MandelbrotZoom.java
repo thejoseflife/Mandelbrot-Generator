@@ -43,7 +43,8 @@ public class MandelbrotZoom extends Canvas implements Runnable {
 	
 	// Scale * 2 is the width and height of the interval the graph is rendered on
 	// Smallest scale is somewhere around 13 zeroes because then the decimals get too large
-	private double SCALE = 0.0000000000005;
+	// Scale of 2 means graph is on interval [focusX - 2, focusX + 2] and [focusY - 2, focusY + 2]
+	private double SCALE = 2;
 	
 	private void init() {
 		
