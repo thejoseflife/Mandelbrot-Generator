@@ -5,17 +5,19 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferStrategy;
 import java.util.*;
 
 import javax.swing.JFrame;
 
-public class MandelbrotZoom extends Canvas implements Runnable {
+public class MandelbrotZoom extends Canvas implements Runnable, MouseListener {
 
 	private static final long serialVersionUID = 1L;
 
 	// Width and height of window
-	private static final int WIDTH = 800, HEIGHT = 800;
+	private static final int WIDTH = 600, HEIGHT = 600;
 	
 	// Do not touch
 	private Thread thread;
@@ -31,22 +33,24 @@ public class MandelbrotZoom extends Canvas implements Runnable {
 	private int numberOfColors = 16;
 	private Color mapping[] = new Color[numberOfColors];
 	
-	private final int ITERATIONS = 10000;
-	private final int DIVERGENT = 10000;
+	private final int ITERATIONS = 100000;
+	private final int DIVERGENT = 100000;
 
 	private List<Complex> points = new ArrayList<Complex>();
 	
 	// The point that you want at the center of graph to zoom in on
 	// Cool point to try:  -1.24254013716898265806, 0.413238151606368892027
-	private double focusX = -1.24254013716898265806;
-	private double focusY = 0.413238151606368892027;
+	private double focusX = 0.19122381986686665;
+	private double focusY = 0.550006613308;
 	
 	// Scale * 2 is the width and height of the interval the graph is rendered on
 	// Smallest scale is somewhere around 13 zeroes because then the decimals get too large
-	// Scale of 2 means graph is on interval [focusX - 2, focusX + 2] and [focusY - 2, focusY + 2]
-	private double SCALE = 2;
+	private double SCALE = 0.0000000000001;
 	
 	private void init() {
+		
+		// If you click a point, the console prints the scaled coordinates of that point
+		addMouseListener(this);
 		
 		LEFT_BOUND = focusX - SCALE;
 		RIGHT_BOUND = focusX + SCALE;
@@ -162,11 +166,8 @@ public class MandelbrotZoom extends Canvas implements Runnable {
 	// Game loop because I used a game template for the rendering
 	public void run() {
 		init();
-		int count = 0;
 		while(running) {
-			if (count % 1000000 == 0){
-				render();
-			}
+			render();
 		}
 		stop();
 	}
@@ -205,6 +206,36 @@ public class MandelbrotZoom extends Canvas implements Runnable {
 		frame.add(mandelbrot);
 		frame.setVisible(true);
 		mandelbrot.start();
+		
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		System.out.println("x: " + translatePoint(LEFT_BOUND, RIGHT_BOUND, e.getX() - (WIDTH / 2)) + " y: " + -translatePoint(BOTTOM_BOUND, TOP_BOUND, (e.getY() - HEIGHT / 2)));
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
 		
 	}
 	
