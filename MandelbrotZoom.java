@@ -29,27 +29,38 @@ public class MandelbrotZoom extends Canvas implements Runnable, MouseListener {
 	private int OFFSET_REAL = WIDTH / 2;
 	private int OFFSET_IMAG = HEIGHT / 2;
 	
-	// You can add more colors, just make sure to add the colors in init() too
+	// You can add more colors to wikipedia, just make sure to add the colors in init() too
 	private int numberOfColors = 16;
 	private Color mapping[] = new Color[numberOfColors];
+
+	private enum ColorSelection {
+		WIKIPEDIA, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA
+	}
+	// Change this value to the colorways above
+	// Recommended that you stick on wikipedia because the other colors blend too much as you zoom
+	private ColorSelection selection = ColorSelection.WIKIPEDIA;
 	
-	private final int ITERATIONS = 100000;
-	private final int DIVERGENT = 100000;
+	private final int ITERATIONS = 10000;
+	private final int DIVERGENT = 100;
 
 	private List<Complex> points = new ArrayList<Complex>();
 	
+	// focusX, focusY, and SCALE are how you zoom in
 	// The point that you want at the center of graph to zoom in on
-	// Cool point to try:  -1.24254013716898265806, 0.413238151606368892027
-	private double focusX = 0.19122381986686665;
-	private double focusY = 0.550006613308;
+	/* Cool points to try:  -1.24254013716898265806, 0.413238151606368892027
+	 * -1.2425836352880493 0.41320801962693554
+	 */
+	private double focusX = 0;
+	private double focusY = 0;
 	
 	// Scale * 2 is the width and height of the interval the graph is rendered on
 	// Smallest scale is somewhere around 13 zeroes because then the decimals get too large
-	private double SCALE = 0.0000000000001;
+	private double SCALE = 2;
 	
 	private void init() {
 		
 		// If you click a point, the console prints the scaled coordinates of that point
+		// You can plug these coordinates into focusX and focusY to zoom into that point
 		addMouseListener(this);
 		
 		LEFT_BOUND = focusX - SCALE;
@@ -82,21 +93,52 @@ public class MandelbrotZoom extends Canvas implements Runnable, MouseListener {
 		
 	}
 	
+	private Color mapColor(double z, double i) {
+		double v = 256 * Math.log(i + 1 - Math.log(Math.log(Math.abs(z)))) / 5;
+		if (v < 256) {
+			switch (selection) {
+			case RED:
+				return new Color((int)v, 0, 0);
+			case GREEN:
+				return new Color(0, (int)v, 0);
+			case BLUE:
+				return new Color(0, 0, (int)v);
+			case YELLOW:
+				return new Color((int)v, (int)v, 0);
+			case CYAN:
+				return new Color(0, (int)v, (int)v);
+			case MAGENTA:
+				return new Color((int)v, (int)v, (int)v);
+			default:
+				return new Color(0, 0, 0);
+			}
+		} else {
+			return Color.black;
+		}
+		
+	}
+	
 	// Find out if point c diverges or converges when plugged into z^2 + c
 	private Complex mappedPoint(double x, double y) {
 		List<Complex> previousValues = new ArrayList<Complex>();
 		Complex c = new Complex(untranslatePoint(LEFT_BOUND, RIGHT_BOUND, x), untranslatePoint(BOTTOM_BOUND, TOP_BOUND, y));
-		c.setColor(Color.black);
 		previousValues.add(new Complex(0, 0));
 		
 		for (int i = 0; i < ITERATIONS; i++) {
 			Complex z = functionZ(previousValues.get(i), new Complex(x, y));
 			previousValues.add(z);
-			if (z.real() > DIVERGENT || z.imag() > DIVERGENT) {
-				
-				if (i < ITERATIONS && i > 0) {
-				    int n = i % numberOfColors;
-				    c.setColor(mapping[n]);
+			
+			double distance = Math.sqrt(z.real() * z.real() + z.imag() + z.imag());
+			if (distance > DIVERGENT) {
+				if (i < ITERATIONS) {
+					
+					if (selection == ColorSelection.WIKIPEDIA) {
+						int n = i % numberOfColors;
+					    c.setColor(mapping[n]);
+					} else {
+						Color c1 = mapColor(distance, i);
+					    c.setColor(c1);
+					}
 				} else {
 					c.setColor(Color.white);
 				}
@@ -106,9 +148,11 @@ public class MandelbrotZoom extends Canvas implements Runnable, MouseListener {
 			}
 			
 		}
+		c.setColor(Color.black);
 
 		return c;
 	}
+
 
 	// Scale point from screen size to interval specified
 	private double translatePoint(double firstBound, double secondBound, double n) {
